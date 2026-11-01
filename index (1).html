@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Billwise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --serif:"Fraunces",Georgia,serif;
+    --mono:"IBM Plex Mono",monospace;
+    --sans:"Inter",system-ui,sans-serif;
+    --paper:#FBF9F5; --page:#E7E2D8; --ink:#1B1A17; --mut:#716D63; --faint:#A7A295;
+    --line:#EAE5DB; --line2:#E0DACE;
+    --green:#15594A; --green-bg:#E4EEE8;
+    --amber:#946212; --amber-bg:#F4EBD7;
+    --red:#A23929; --red-bg:#F3E3DE;
+    --card:#FFFFFF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:
+    radial-gradient(120% 80% at 50% -10%, #EFEBE2, var(--page));
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 12px;color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  /* phone frame */
+  .phone{width:390px;max-width:100%;height:812px;max-height:92vh;background:var(--paper);border-radius:40px;
+    box-shadow:0 2px 2px rgba(0,0,0,.04),0 30px 60px -20px rgba(40,34,20,.35),0 0 0 10px #111 ,0 0 0 11px #2a2a2a;
+    overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:140px;height:26px;background:#111;border-radius:0 0 16px 16px;z-index:40}
+  .status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .status .r{display:flex;gap:6px;align-items:center}
+  .status svg{display:block}
+
+  /* app top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:4px 22px 14px;flex-shrink:0}
+  .wm{font-family:var(--serif);font-weight:600;font-size:20px;letter-spacing:-.02em}
+  .wm b{color:var(--green)}
+  .av{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+
+  /* scroll area */
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 22px 110px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  .screen{display:none;animation:fade .4s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:10px}
+
+  /* hero */
+  .hero{padding:6px 0 18px}
+  .hero .big{font-family:var(--serif);font-weight:500;font-size:46px;letter-spacing:-.02em;line-height:1;display:flex;align-items:baseline;gap:2px}
+  .hero .cur{font-size:26px;color:var(--mut);font-weight:400}
+  .hero .sub{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--mut)}
+  .delta{font-family:var(--mono);font-size:12px;padding:3px 7px;border-radius:6px;font-weight:500}
+  .delta.up{color:var(--red);background:var(--red-bg)}
+  .delta.down{color:var(--green);background:var(--green-bg)}
+
+  /* chart */
+  .chart{display:flex;align-items:flex-end;gap:10px;height:96px;margin:18px 0 6px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
+  .bar .col{width:100%;background:var(--line2);border-radius:5px 5px 2px 2px;transition:height .8s cubic-bezier(.3,.9,.3,1)}
+  .bar.now .col{background:var(--green)}
+  .bar .m{font-size:10px;color:var(--faint);font-family:var(--mono)}
+
+  /* insight banner */
+  .insight{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:#F3F0E9;border-radius:16px;padding:16px;margin:16px 0 22px}
+  .insight .ic{width:30px;height:30px;border-radius:9px;background:rgba(243,240,233,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+  .insight h4{font-size:14px;font-weight:600;margin-bottom:3px}
+  .insight p{font-size:12.5px;color:#C7C2B6;line-height:1.5}
+  .insight b{color:#8FD0B9;font-weight:600}
+
+  .sechead{display:flex;align-items:center;justify-content:space-between;margin:22px 0 4px}
+  .sechead h3{font-size:15px;font-weight:600}
+  .sechead .link{font-size:12px;color:var(--green);font-weight:500}
+
+  /* upcoming / bill rows */
+  .row{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .tag{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .tag.r{background:var(--red)} .tag.a{background:var(--amber)} .tag.g{background:#1E8A6E}
+  .row .name{flex:1;min-width:0}
+  .row .name .t{font-size:14.5px;font-weight:500}
+  .row .name .s{font-size:11.5px;color:var(--mut);margin-top:2px}
+  .row .amt{text-align:right}
+  .row .amt .v{font-family:var(--mono);font-size:14.5px;font-weight:500}
+  .row .amt .due{font-size:11px;margin-top:2px;font-weight:500}
+  .due.r{color:var(--red)} .due.a{color:var(--amber)} .due.g{color:var(--faint)}
+  .mom{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:5px;font-weight:500}
+  .mom.up{color:var(--red);background:var(--red-bg)} .mom.down{color:var(--green);background:var(--green-bg)} .mom.flat{color:var(--faint);background:var(--line)}
+
+  /* category breakdown */
+  .cat{margin:8px 0 0}
+  .cat .crow{margin:16px 0}
+  .cat .cl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+  .cat .cl .cv{font-family:var(--mono);font-weight:500}
+  .track{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+  .track .fill{height:100%;border-radius:3px}
+
+  /* subscription cards */
+  .subcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+  .subcard.flag{border-color:var(--line2)}
+  .sc-top{display:flex;align-items:flex-start;gap:12px}
+  .sc-logo{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:17px;color:#fff;flex-shrink:0}
+  .sc-main{flex:1;min-width:0}
+  .sc-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .sc-plan{font-size:11.5px;color:var(--mut);margin-top:2px}
+  .sc-price{text-align:right}
+  .sc-price .v{font-family:var(--mono);font-size:15px;font-weight:500}
+  .sc-price .p{font-size:10.5px;color:var(--faint);margin-top:1px}
+  .pips{display:flex;gap:4px;margin-top:9px;align-items:center}
+  .pip{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+  .pip.on-g{background:#1E8A6E} .pip.on-a{background:var(--amber)} .pip.on-r{background:var(--red)}
+  .pscore{font-size:10.5px;color:var(--faint);margin-left:4px;letter-spacing:.02em}
+  .usage{margin-top:12px}
+  .usage .ul{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:6px}
+  .usage .ul .uv{font-family:var(--mono)}
+  .ubar{height:4px;background:var(--line);border-radius:3px;overflow:hidden}
+  .ubar .uf{height:100%;border-radius:3px}
+  .alert{display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.45}
+  .alert.g{background:var(--green-bg);color:#124C3E} .alert.a{background:var(--amber-bg);color:#6E490D} .alert.r{background:var(--red-bg);color:#7E2A1E}
+  .alert .ad{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .alert.g .ad{background:#1E8A6E} .alert.a .ad{background:var(--amber)} .alert.r .ad{background:var(--red)}
+  .cancel-btn{width:100%;margin-top:12px;padding:12px;border:none;border-radius:12px;background:var(--ink);color:#F3F0E9;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .1s}
+  .cancel-btn:active{transform:scale(.98)}
+  .cancel-btn.done{background:var(--green-bg);color:var(--green);cursor:default}
+
+  /* savings summary */
+  .savings{background:var(--green);color:#EAF4EF;border-radius:18px;padding:20px;margin-top:8px}
+  .savings .sl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#A9D3C4;font-weight:600}
+  .savings .sv{font-family:var(--serif);font-size:34px;font-weight:500;margin:8px 0 2px;letter-spacing:-.02em}
+  .savings .sy{font-size:12.5px;color:#BFE0D4}
+  .savings .sy b{color:#fff;font-family:var(--mono);font-weight:500}
+
+  /* bottom nav */
+  .nav{position:absolute;bottom:0;left:0;right:0;height:84px;background:rgba(251,249,245,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;padding:10px 24px 24px;z-index:30}
+  .nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--faint);cursor:pointer;font-family:var(--sans);font-size:10.5px;font-weight:500;letter-spacing:.02em}
+  .nav button.on{color:var(--ink)}
+  .nav button.on svg{color:var(--green)}
+  .nav svg{width:21px;height:21px}
+
+  /* cancel sheet */
+  .sheet-bg{position:absolute;inset:0;background:rgba(20,18,12,.4);opacity:0;pointer-events:none;transition:opacity .35s;z-index:50}
+  .sheet-bg.open{opacity:1;pointer-events:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--paper);border-radius:26px 26px 0 0;transform:translateY(100%);transition:transform .4s cubic-bezier(.3,.9,.3,1);z-index:51;max-height:86%;overflow-y:auto;scrollbar-width:none;padding:10px 22px 30px}
+  .sheet.open{transform:none}
+  .sheet::-webkit-scrollbar{display:none}
+  .grip{width:38px;height:4px;border-radius:3px;background:var(--line2);margin:8px auto 18px}
+  .sheet h2{font-family:var(--serif);font-size:23px;font-weight:500;letter-spacing:-.01em;margin-bottom:6px}
+  .sheet .why{font-size:13px;color:var(--mut);line-height:1.5;margin-bottom:18px}
+  .step{border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;background:var(--card)}
+  .step .sh{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;margin-bottom:10px}
+  .step .sn{width:20px;height:20px;border-radius:6px;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono)}
+  .draft{font-family:var(--mono);font-size:11.5px;line-height:1.6;color:#2C2A24;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap}
+  .copy{margin-top:10px;width:100%;padding:10px;border:1px solid var(--line2);border-radius:10px;background:none;font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+  .copy.copied{background:var(--green-bg);color:var(--green);border-color:transparent}
+  .confirm{width:100%;margin-top:6px;padding:14px;border:none;border-radius:13px;background:var(--green);color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer}
+  .hint{text-align:center;font-size:11px;color:var(--faint);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status">
+    <span>9:41</span>
+    <span class="r">
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.2c2.1 0 4 .8 5.5 2.2l1.2-1.3C13 1.3 10.6.3 8 .3S3 1.3 1.3 3.1L2.5 4.4C4 3 5.9 2.2 8 2.2zM8 5.5c1.1 0 2.1.4 2.9 1.2l1.2-1.3C11 4.3 9.6 3.7 8 3.7s-3 .6-4.1 1.7l1.2 1.3C5.9 5.9 6.9 5.5 8 5.5zm0 3.2L9.6 7C9.2 6.5 8.6 6.2 8 6.2s-1.2.3-1.6.8L8 8.7z"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2.5" y="2.5" width="16" height="7" rx="1.5" fill="currentColor"/><rect x="22.5" y="4" width="1.5" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+    </span>
+  </div>
+
+  <div class="topbar">
+    <div class="wm">bill<b>wise</b></div>
+    <div class="av">S</div>
+  </div>
+
+  <div class="scroll" id="scroll">
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="screen active" id="overview">
+      <div class="hero">
+        <div class="eyebrow">This month · October</div>
+        <div class="big"><span class="cur">₹</span>18,642</div>
+        <div class="sub"><span>Bills + subscriptions</span><span class="delta up">↑ 9% vs Sep</span></div>
+      </div>
+
+      <div class="chart" id="chart">
+        <div class="bar"><div class="col" style="height:52%"></div><span class="m">May</span></div>
+        <div class="bar"><div class="col" style="height:64%"></div><span class="m">Jun</span></div>
+        <div class="bar"><div class="col" style="height:58%"></div><span class="m">Jul</span></div>
+        <div class="bar"><div class="col" style="height:71%"></div><span class="m">Aug</span></div>
+        <div class="bar"><div class="col" style="height:66%"></div><span class="m">Sep</span></div>
+        <div class="bar now"><div class="col" style="height:88%"></div><span class="m">Oct</span></div>
+      </div>
+
+      <div class="insight">
+        <div class="ic">◎</div>
+        <div>
+          <h4>Two music apps, one pair of ears</h4>
+          <p>You pay for Spotify <b>and</b> YouTube Premium. Dropping one saves <b>₹149/mo</b> — ₹1,788 a year.</p>
+        </div>
+      </div>
+
+      <div class="sechead"><h3>Upcoming</h3><span class="link">All bills →</span></div>
+      <div class="row"><span class="tag r"></span><div class="name"><div class="t">Tata Power</div><div class="s">Electricity</div></div><div class="amt"><div class="v">₹1,840</div><div class="due r">Due in 3 days</div></div></div>
+      <div class="row"><span class="tag a"></span><div class="name"><div class="t">BMC Water</div><div class="s">Utility</div></div><div class="amt"><div class="v">₹310</div><div class="due a">Due in 6 days</div></div></div>
+      <div class="row"><span class="tag a"></span><div class="name"><div class="t">Mahanagar Gas</div><div class="s">Piped gas</div></div><div class="amt"><div class="v">₹620</div><div class="due a">Due in 8 days</div></div></div>
+      <div class="row"><span class="tag g"></span><div class="name"><div class="t">Airtel Broadband</div><div class="s">Internet</div></div><div class="amt"><div class="v">₹999</div><div class="due g">Due in 12 days</div></div></div>
+    </section>
+
+    <!-- ============ BILLS ============ -->
+    <section class="screen" id="bills">
+      <div class="hero">
+        <div class="eyebrow">Recurring bills · 6 active</div>
+        <div class="big"><span class="cur">₹</span>5,418</div>
+        <div class="sub"><span>Fixed monthly outgoings</span></div>
+      </div>
+
+      <div class="sechead"><h3>By due date</h3></div>
+      <div class="row"><span class="tag r"></span><div class="name"><div class="t">Tata Power</div><div class="s">Electricity · due in 3 days</div></div><div class="amt"><div class="v">₹1,840</div><div style="margin-top:4px"><span class="mom up">↑ 18%</span></div></div></div>
+      <div class="row"><span class="tag a"></span><div class="name"><div class="t">BMC Water</div><div class="s">Water · due in 6 days</div></div><div class="amt"><div class="v">₹310</div><div style="margin-top:4px"><span class="mom flat">→ 0%</span></div></div></div>
+      <div class="row"><span class="tag a"></span><div class="name"><div class="t">Mahanagar Gas</div><div class="s">Gas · due in 8 days</div></div><div class="amt"><div class="v">₹620</div><div style="margin-top:4px"><span class="mom down">↓ 6%</span></div></div></div>
+      <div class="row"><span class="tag g"></span><div class="name"><div class="t">Airtel Broadband</div><div class="s">Internet · due in 12 days</div></div><div class="amt"><div class="v">₹999</div><div style="margin-top:4px"><span class="mom flat">→ 0%</span></div></div></div>
+      <div class="row"><span class="tag g"></span><div class="name"><div class="t">Jio Postpaid</div><div class="s">Mobile · due in 15 days</div></div><div class="amt"><div class="v">₹399</div><div style="margin-top:4px"><span class="mom up">↑ 5%</span></div></div></div>
+      <div class="row"><span class="tag g"></span><div class="name"><div class="t">HDFC Ergo</div><div class="s">Health cover · due in 22 days</div></div><div class="amt"><div class="v">₹1,250</div><div style="margin-top:4px"><span class="mom flat">→ 0%</span></div></div></div>
+
+      <div class="sechead" style="margin-top:28px"><h3>Where it goes</h3></div>
+      <div class="cat">
+        <div class="crow"><div class="cl"><span>Utilities</span><span class="cv">₹2,770</span></div><div class="track"><div class="fill" style="width:51%;background:var(--green)"></div></div></div>
+        <div class="crow"><div class="cl"><span>Telecom</span><span class="cv">₹1,398</span></div><div class="track"><div class="fill" style="width:26%;background:var(--amber)"></div></div></div>
+        <div class="crow"><div class="cl"><span>Insurance</span><span class="cv">₹1,250</span></div><div class="track"><div class="fill" style="width:23%;background:#8A6FB0"></div></div></div>
+      </div>
+    </section>
+
+    <!-- ============ SUBSCRIPTIONS ============ -->
+    <section class="screen" id="subs">
+      <div class="hero">
+        <div class="eyebrow">Subscriptions · 7 active</div>
+        <div class="big"><span class="cur">₹</span>4,490</div>
+        <div class="sub"><span>Monthly</span><span class="delta up">↑ ₹649 unused</span></div>
+      </div>
+
+      <!-- Netflix: flagged -->
+      <div class="subcard flag" id="card-netflix">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#B42318">N</div>
+          <div class="sc-main">
+            <div class="sc-name">Netflix</div>
+            <div class="sc-plan">Premium · 4K</div>
+            <div class="pips"><span class="pip on-r"></span><span class="pip"></span><span class="pip"></span><span class="pscore">Poor value</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹649</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Watch time this month</span><span class="uv">15%</span></div><div class="ubar"><div class="uf" style="width:15%;background:var(--red)"></div></div></div>
+        <div class="alert r"><span class="ad"></span><span>Watched 4 days this month — that's <b>₹162 per sitting</b>. It also overlaps with Amazon Prime Video, which you use far more.</span></div>
+        <button class="cancel-btn" data-sub="netflix">⚡ Draft cancellation</button>
+      </div>
+
+      <!-- Cult.fit: flagged -->
+      <div class="subcard flag" id="card-cult">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#1E8A6E">c</div>
+          <div class="sc-main">
+            <div class="sc-name">Cult.fit</div>
+            <div class="sc-plan">Elite · all centres</div>
+            <div class="pips"><span class="pip on-r"></span><span class="pip"></span><span class="pip"></span><span class="pscore">Poor value</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹1,299</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Visits in 90 days</span><span class="uv">2 visits</span></div><div class="ubar"><div class="uf" style="width:8%;background:var(--red)"></div></div></div>
+        <div class="alert r"><span class="ad"></span><span>Two visits in three months — <b>₹650 per visit</b>. A single-day pass is ₹200. You'd save ₹1,299/mo by switching to pay-per-use.</span></div>
+        <button class="cancel-btn" data-sub="cult">⚡ Draft cancellation</button>
+      </div>
+
+      <!-- YouTube Premium: overlap -->
+      <div class="subcard flag" id="card-yt">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#C8321F">▸</div>
+          <div class="sc-main">
+            <div class="sc-name">YouTube Premium</div>
+            <div class="sc-plan">Individual</div>
+            <div class="pips"><span class="pip on-a"></span><span class="pip on-a"></span><span class="pip"></span><span class="pscore">Okay</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹149</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Used for music</span><span class="uv">40%</span></div><div class="ubar"><div class="uf" style="width:40%;background:var(--amber)"></div></div></div>
+        <div class="alert a"><span class="ad"></span><span>You also pay for <b>Spotify</b> — two music services doing the same job. Keep the one you open more.</span></div>
+        <button class="cancel-btn" data-sub="yt">⚡ Draft cancellation</button>
+      </div>
+
+      <!-- Adobe: switch suggestion -->
+      <div class="subcard">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#2A2A2A">Ai</div>
+          <div class="sc-main">
+            <div class="sc-name">Adobe Creative Cloud</div>
+            <div class="sc-plan">All apps</div>
+            <div class="pips"><span class="pip on-a"></span><span class="pip on-a"></span><span class="pip"></span><span class="pscore">Okay</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹1,676</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Apps opened</span><span class="uv">Photoshop only</span></div><div class="ubar"><div class="uf" style="width:30%;background:var(--amber)"></div></div></div>
+        <div class="alert g"><span class="ad"></span><span>You only open Photoshop. The <b>Photography plan</b> covers it for ₹600 — saving <b>₹1,076/mo</b>.</span></div>
+      </div>
+
+      <!-- Spotify: great -->
+      <div class="subcard">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#1E8A6E">♪</div>
+          <div class="sc-main">
+            <div class="sc-name">Spotify</div>
+            <div class="sc-plan">Premium Individual</div>
+            <div class="pips"><span class="pip on-g"></span><span class="pip on-g"></span><span class="pip on-g"></span><span class="pscore">Great value</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹119</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Listening</span><span class="uv">85%</span></div><div class="ubar"><div class="uf" style="width:85%;background:#1E8A6E"></div></div></div>
+      </div>
+
+      <!-- Amazon Prime: great -->
+      <div class="subcard">
+        <div class="sc-top">
+          <div class="sc-logo" style="background:#146EB4">a</div>
+          <div class="sc-main">
+            <div class="sc-name">Amazon Prime</div>
+            <div class="sc-plan">Annual · shopping + video</div>
+            <div class="pips"><span class="pip on-g"></span><span class="pip on-g"></span><span class="pip on-g"></span><span class="pscore">Great value</span></div>
+          </div>
+          <div class="sc-price"><div class="v">₹299</div><div class="p">/month</div></div>
+        </div>
+        <div class="usage"><div class="ul"><span>Shopping + streaming</span><span class="uv">72%</span></div><div class="ubar"><div class="uf" style="width:72%;background:#1E8A6E"></div></div></div>
+      </div>
+
+      <div class="savings">
+        <div class="sl">Potential savings</div>
+        <div class="sv" id="save-month">₹3,173<span style="font-size:17px;color:#A9D3C4">/mo</span></div>
+        <div class="sy"><b>₹38,076</b> a year — ₹2,097 from cancelling 3, plus ₹1,076 from switching Adobe's plan.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- bottom nav -->
+  <div class="nav">
+    <button class="on" data-tab="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10.5 12 3l9 7.5M5 9v11h5v-6h4v6h5V9"/></svg>Home</button>
+    <button data-tab="bills">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Bills</button>
+    <button data-tab="subs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><circle cx="7" cy="7.5" r="1" fill="currentColor"/><circle cx="7" cy="17" r="1" fill="currentColor"/></svg>Subs</button>
+  </div>
+
+  <!-- cancel sheet -->
+  <div class="sheet-bg" id="sheetbg"></div>
+  <div class="sheet" id="sheet">
+    <div class="grip"></div>
+    <h2 id="sheet-title">Cancel Netflix?</h2>
+    <p class="why" id="sheet-why"></p>
+
+    <div class="step">
+      <div class="sh"><span class="sn">1</span> Stop the UPI AutoPay mandate</div>
+      <div class="draft" id="draft-upi"></div>
+      <button class="copy" data-copy="draft-upi">Copy steps</button>
+    </div>
+
+    <div class="step">
+      <div class="sh"><span class="sn">2</span> Send the cancellation request</div>
+      <div class="draft" id="draft-email"></div>
+      <button class="copy" data-copy="draft-email">Copy message</button>
+    </div>
+
+    <button class="confirm" id="confirm-cancel">Mark as cancelled &amp; bank the saving</button>
+    <div class="hint">Billwise drafts it — you stay in control of sending.</div>
+  </div>
+</div>
+
+<script>
+  // ---- tab switching ----
+  const tabs=document.querySelectorAll('.nav button');
+  const screens=document.querySelectorAll('.screen');
+  const scroll=document.getElementById('scroll');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('on'));t.classList.add('on');
+    screens.forEach(s=>s.classList.remove('active'));
+    document.getElementById(t.dataset.tab).classList.add('active');
+    scroll.scrollTop=0;
+  }));
+
+  // ---- cancel data ----
+  const subs={
+    netflix:{name:'Netflix',provider:'Netflix',save:649,
+      why:'You watched it 4 days this month and it overlaps with Amazon Prime Video. Cancelling frees ₹649/mo.',
+      upi:"Open your UPI app (GPay / PhonePe / Paytm)\n→ Autopay / Mandates\n→ Find \"NETFLIX\"\n→ Tap Pause or Cancel\n\nThis stops the auto-debit immediately so you're never charged again.",
+      email:"To: cancellations@netflix.com\nSubject: Cancel my Netflix subscription\n\nHi,\n\nPlease cancel my Netflix Premium plan effective immediately and stop all future billing. Registered email: sameer@email.com.\n\nKindly confirm the cancellation in writing.\n\nThanks,\nSameer"},
+    cult:{name:'Cult.fit',provider:'Cult.fit',save:1299,
+      why:'Two visits in 90 days works out to ₹650 a visit. Cancelling and paying per day pass saves ₹1,299/mo.',
+      upi:"Open your UPI app\n→ Autopay / Mandates\n→ Find \"CULTFIT\" / \"CUREFIT\"\n→ Tap Cancel\n\nThe monthly auto-debit will stop from the next cycle.",
+      email:"To: support@cult.fit\nSubject: Cancel Elite membership\n\nHi,\n\nPlease cancel my Cult.fit Elite membership and stop auto-renewal. I'd like to move to pay-per-session. Registered number: +91 •••• ••••.\n\nPlease confirm once done.\n\nThanks,\nSameer"},
+    yt:{name:'YouTube Premium',provider:'YouTube',save:149,
+      why:'You already pay for Spotify for music. Cancelling YouTube Premium removes the overlap and saves ₹149/mo.',
+      upi:"Open your UPI app\n→ Autopay / Mandates\n→ Find \"GOOGLE\" / \"YOUTUBE\"\n→ Tap Cancel\n\nOr manage directly: youtube.com/paid_memberships",
+      email:"Note: YouTube Premium is cancelled in-app, not by email.\n\nyoutube.com → Profile → Purchases & memberships → YouTube Premium → Deactivate.\n\nYour benefits run until the end of the paid period."}
+  };
+
+  const bg=document.getElementById('sheetbg'), sheet=document.getElementById('sheet');
+  let current=null;
+  document.querySelectorAll('.cancel-btn').forEach(b=>b.addEventListener('click',()=>{
+    if(b.classList.contains('done'))return;
+    const d=subs[b.dataset.sub];current=b.dataset.sub;
+    document.getElementById('sheet-title').textContent='Cancel '+d.name+'?';
+    document.getElementById('sheet-why').textContent=d.why;
+    document.getElementById('draft-upi').textContent=d.upi;
+    document.getElementById('draft-email').textContent=d.email;
+    document.querySelectorAll('.copy').forEach(c=>{c.classList.remove('copied');c.textContent=c.dataset.copy==='draft-upi'?'Copy steps':'Copy message'});
+    bg.classList.add('open');sheet.classList.add('open');
+  }));
+  function closeSheet(){bg.classList.remove('open');sheet.classList.remove('open')}
+  bg.addEventListener('click',closeSheet);
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(c=>c.addEventListener('click',()=>{
+    const txt=document.getElementById(c.dataset.copy).textContent;
+    navigator.clipboard&&navigator.clipboard.writeText(txt);
+    c.classList.add('copied');c.textContent='✓ Copied';
+  }));
+
+  // confirm cancellation -> update card + savings
+  let month=3173, year=38076, flags=3;
+  document.getElementById('confirm-cancel').addEventListener('click',()=>{
+    if(!current)return;
+    const d=subs[current];
+    const btn=document.querySelector('.cancel-btn[data-sub="'+current+'"]');
+    btn.classList.add('done');btn.textContent='✓ Cancellation drafted';
+    closeSheet();
+    current=null;
+  });
+</script>
+</body>
+</html>
